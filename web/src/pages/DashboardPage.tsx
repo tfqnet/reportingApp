@@ -7,10 +7,11 @@ interface Metrics {
   openReports: number;
   unsafeActs: number;
   unsafeConditions: number;
+  safetyExcellence: number;
 }
 
 export default function DashboardPage() {
-  const [metrics, setMetrics] = useState<Metrics>({ totalReports: 0, openReports: 0, unsafeActs: 0, unsafeConditions: 0 });
+  const [metrics, setMetrics] = useState<Metrics>({ totalReports: 0, openReports: 0, unsafeActs: 0, unsafeConditions: 0, safetyExcellence: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -92,6 +93,18 @@ export default function DashboardPage() {
             <Typography variant="h3">{metrics.unsafeConditions}</Typography>
             <Typography variant="body2" color="text.secondary">
               Reported
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Paper sx={{ p: 3, bgcolor: 'success.light' }}>
+            <Typography variant="h6" color="text.secondary">
+              Safety Excellence
+            </Typography>
+            <Typography variant="h3">{metrics.safetyExcellence}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Recognized
             </Typography>
           </Paper>
         </Grid>

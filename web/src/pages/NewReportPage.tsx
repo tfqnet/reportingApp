@@ -74,6 +74,7 @@ export default function NewReportPage() {
             >
               <MenuItem value="unsafe_act">Unsafe Act</MenuItem>
               <MenuItem value="unsafe_condition">Unsafe Condition</MenuItem>
+              <MenuItem value="safety_excellence">Safety Excellence</MenuItem>
             </Select>
           </FormControl>
 

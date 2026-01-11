@@ -3,7 +3,7 @@ import prisma from '../db';
 import { z } from 'zod';
 
 const createReportSchema = z.object({
-  type: z.enum(['unsafe_act', 'unsafe_condition']),
+  type: z.enum(['unsafe_act', 'unsafe_condition', 'safety_excellence']),
   title: z.string().min(1),
   description: z.string().min(1),
   siteId: z.string().uuid().optional(),
@@ -308,6 +308,17 @@ export const getDashboardMetrics = async (req: Request, res: Response) => {
       },
     });
 
+    // Safety excellence
+    const safetyExcellence = await prisma.report.count({
+      where: {
+        tenantId,
+        type: 'safety_excellence',
+        submittedAt: {
+          gte: monthStart,
+        },
+      },
+    });
+
     // Recent reports
     const recentReports = await prisma.report.findMany({
       where: { tenantId },
@@ -336,6 +347,7 @@ export const getDashboardMetrics = async (req: Request, res: Response) => {
         openReports,
         unsafeActs,
         unsafeConditions,
+        safetyExcellence,
         recentReports,
       },
     });

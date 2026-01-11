@@ -64,7 +64,10 @@ export default function ReportsPage() {
   };
 
   const getTypeLabel = (type: string) => {
-    return type === 'unsafe_act' ? 'Unsafe Act' : 'Unsafe Condition';
+    if (type === 'unsafe_act') return 'Unsafe Act';
+    if (type === 'unsafe_condition') return 'Unsafe Condition';
+    if (type === 'safety_excellence') return 'Safety Excellence';
+    return type;
   };
 
   if (loading) {
