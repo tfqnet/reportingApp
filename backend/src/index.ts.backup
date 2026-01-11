@@ -5,7 +5,6 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth';
-import reportsRoutes from './routes/reports';
 
 dotenv.config();
 
@@ -54,7 +53,6 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api', reportsRoutes);
 
 // 404 handler
 app.use((req, res) => {

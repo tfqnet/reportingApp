@@ -1,35 +1,54 @@
-import { Routes, Route } from 'react-router-dom';
-import { Box, Container, Typography } from '@mui/material';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import ReportsPage from './pages/ReportsPage';
+import NewReportPage from './pages/NewReportPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import Layout from './components/Layout';
+import { useIsAuthenticated } from './store/authStore';
 
 function App() {
+  const isAuthenticated = useIsAuthenticated();
+
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          SafetyReport
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Multi-tenant safety reporting for Unsafe Acts and Unsafe Conditions
-        </Typography>
-        
-        <Routes>
-          <Route path="/" element={
-            <Box sx={{ mt: 4 }}>
-              <Typography variant="h5">Welcome to SafetyReport</Typography>
-              <Typography variant="body2" sx={{ mt: 2 }}>
-                System is being set up. Features coming soon:
-              </Typography>
-              <ul>
-                <li>Dashboard with safety metrics</li>
-                <li>Report submission and management</li>
-                <li>User and site management</li>
-                <li>Action tracking</li>
-              </ul>
-            </Box>
-          } />
-        </Routes>
-      </Container>
-    </Box>
+    <Routes>
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <DashboardPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <ReportsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports/new"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <NewReportPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
 
