@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -19,7 +19,7 @@ model Tenant {
   industry         String?
   subdomain        String?  @unique
   logoUrl          String?  @map("logo_url")
-  settings         String   @default("{}") @map("settings_json")
+  settings         Json     @default("{}") @map("settings_json")
   subscriptionPlan String   @default("free") @map("subscription_plan")
   maxUsers         Int      @default(10) @map("max_users")
   isActive         Boolean  @default(true) @map("is_active")
@@ -138,8 +138,8 @@ model Report {
   submittedAt            DateTime  @default(now()) @map("submitted_at")
   siteId                 String    @map("site_id")
   locationDescription    String?   @map("location_description")
-  latitude               Float?
-  longitude              Float?
+  latitude               Decimal?  @db.Decimal(10, 7)
+  longitude              Decimal?  @db.Decimal(10, 7)
   type                   String // 'unsafe_act', 'unsafe_condition'
   categoryId             String?   @map("category_id")
   title                  String

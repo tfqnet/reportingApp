@@ -1,0 +1,9 @@
+# Ignore environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# Keep example files
+!.env.example
+!.env.production.example
