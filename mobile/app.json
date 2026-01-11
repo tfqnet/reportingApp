@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "SafetyReport",
+    "slug": "safetyreport-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.safetyreport",
+      "infoPlist": {
+        "NSCameraUsageDescription": "SafetyReport requires camera access to capture photos of unsafe conditions.",
+        "NSLocationWhenInUseUsageDescription": "SafetyReport requires location access to tag reports with GPS coordinates.",
+        "NSPhotoLibraryUsageDescription": "SafetyReport requires photo library access to attach images to reports."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.yourcompany.safetyreport",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SafetyReport to access your camera to capture safety reports."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow SafetyReport to use your location to tag safety reports."
+        }
+      ]
+    ]
+  }
+}

@@ -1,0 +1,248 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ============================================
+// MULTI-TENANT CORE TABLES
+// ============================================
+
+model Tenant {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  industry         String?
+  subdomain        String?  @unique
+  logoUrl          String?  @map("logo_url")
+  settings         String   @default("{}") @map("settings_json")
+  subscriptionPlan String   @default("free") @map("subscription_plan")
+  maxUsers         Int      @default(10) @map("max_users")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  users      User[]
+  sites      Site[]
+  categories Category[]
+  reports    Report[]
+  media      Media[]
+  actions    Action[]
+  comments   Comment[]
+
+  @@map("tenants")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  tenantId     String    @map("tenant_id")
+  email        String
+  passwordHash String    @map("password_hash")
+  firstName    String?   @map("first_name")
+  lastName     String?   @map("last_name")
+  phone        String?
+  avatarUrl    String?   @map("avatar_url")
+  role         String // 'field_worker', 'supervisor', 'safety_officer', 'admin'
+  department   String?
+  employeeId   String?   @map("employee_id")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLogin    DateTime? @map("last_login")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  tenant             Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sites              UserSite[]
+  reportsSubmitted   Report[]   @relation("ReportSubmitter")
+  reportsAssigned    Report[]   @relation("ReportAssignee")
+  reportsClosed      Report[]   @relation("ReportCloser")
+  actionsAssignedTo  Action[]   @relation("ActionAssignee")
+  actionsAssignedBy  Action[]   @relation("ActionAssigner")
+  actionsCompleted   Action[]   @relation("ActionCompleter")
+  actionsVerified    Action[]   @relation("ActionVerifier")
+  comments           Comment[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([tenantId, email])
+  @@map("users")
+}
+
+model Site {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  name      String
+  code      String?
+  address   String?
+  latitude  Float?
+  longitude Float?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tenant  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users   UserSite[]
+  reports Report[]
+
+  @@index([tenantId])
+  @@map("sites")
+}
+
+model UserSite {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  siteId    String   @map("site_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, siteId])
+  @@map("user_sites")
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  name        String
+  type        String // 'unsafe_act', 'unsafe_condition'
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reports Report[]
+
+  @@unique([tenantId, name, type])
+  @@map("categories")
+}
+
+// ============================================
+// UAUC CORE TABLES
+// ============================================
+
+model Report {
+  id                     String    @id @default(uuid())
+  tenantId               String    @map("tenant_id")
+  reportNumber           String    @unique @map("report_number")
+  submittedBy            String    @map("submitted_by")
+  submittedAt            DateTime  @default(now()) @map("submitted_at")
+  siteId                 String    @map("site_id")
+  locationDescription    String?   @map("location_description")
+  latitude               Float?
+  longitude              Float?
+  type                   String // 'unsafe_act', 'unsafe_condition'
+  categoryId             String?   @map("category_id")
+  title                  String
+  description            String
+  immediateActionTaken   String?   @map("immediate_action_taken")
+  severity               Int? // 1-5
+  likelihood             Int? // 1-5
+  exposure               Int? // 1-5
+  assignedTo             String?   @map("assigned_to")
+  assignedAt             DateTime? @map("assigned_at")
+  status                 String    @default("open") // 'open', 'in_progress', 'under_review', 'closed'
+  closedAt               DateTime? @map("closed_at")
+  closedBy               String?   @map("closed_by")
+  tags                   String?   @map("tags_csv") // Comma-separated
+  isAnonymous            Boolean   @default(false) @map("is_anonymous")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  submitter        User      @relation("ReportSubmitter", fields: [submittedBy], references: [id])
+  site             Site      @relation(fields: [siteId], references: [id])
+  category         Category? @relation(fields: [categoryId], references: [id])
+  assignee         User?     @relation("ReportAssignee", fields: [assignedTo], references: [id])
+  closer           User?     @relation("ReportCloser", fields: [closedBy], references: [id])
+  media            Media[]
+  actions          Action[]
+  comments         Comment[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([submittedBy])
+  @@index([assignedTo])
+  @@index([siteId])
+  @@map("reports")
+}
+
+model Media {
+  id           String   @id @default(uuid())
+  tenantId     String   @map("tenant_id")
+  reportId     String   @map("report_id")
+  fileUrl      String   @map("file_url")
+  fileType     String?  @map("file_type")
+  fileSize     Int?     @map("file_size")
+  thumbnailUrl String?  @map("thumbnail_url")
+  caption      String?
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+  @@map("media")
+}
+
+model Action {
+  id              String    @id @default(uuid())
+  tenantId        String    @map("tenant_id")
+  reportId        String    @map("report_id")
+  title           String
+  description     String?
+  actionType      String    @default("corrective") @map("action_type") // 'immediate', 'corrective', 'preventive'
+  assignedTo      String    @map("assigned_to")
+  assignedBy      String    @map("assigned_by")
+  assignedAt      DateTime  @default(now()) @map("assigned_at")
+  dueDate         DateTime? @map("due_date")
+  status          String    @default("open") // 'open', 'in_progress', 'completed', 'verified'
+  completedAt     DateTime? @map("completed_at")
+  completedBy     String?   @map("completed_by")
+  completionNotes String?   @map("completion_notes")
+  verifiedAt      DateTime? @map("verified_at")
+  verifiedBy      String?   @map("verified_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  report    Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  assignee  User   @relation("ActionAssignee", fields: [assignedTo], references: [id])
+  assigner  User   @relation("ActionAssigner", fields: [assignedBy], references: [id])
+  completer User?  @relation("ActionCompleter", fields: [completedBy], references: [id])
+  verifier  User?  @relation("ActionVerifier", fields: [verifiedBy], references: [id])
+
+  @@index([tenantId])
+  @@index([assignedTo])
+  @@map("actions")
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  reportId    String   @map("report_id")
+  userId      String   @map("user_id")
+  commentText String   @map("comment_text")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([reportId])
+  @@map("comments")
+}
